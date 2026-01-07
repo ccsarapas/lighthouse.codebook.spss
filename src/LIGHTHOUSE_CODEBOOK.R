@@ -51,45 +51,9 @@ LIGHTHOUSE CODEBOOK
 # LIGHTHOUSE CODEBOOK.
 
 # LIGHTHOUSE CODEBOOK
-#   OUTFILE="C:\Users\ccsarapas\Box\Casey Sarapas - CHS File Share\Projects\LI Data Profile\Tests\from spss.xlsx"
-#   /DATA 
-#     NAME="CT SFT GAIN" 
-#     FILE="C:\Users\ccsarapas\Box\Casey Sarapas - CHS File Share\Projects\LI Data Profile\Example LI datasets\GAIN\GAIN-Quick-v4.sav"
-#   /BY XOBS    
-#   /SPLITLABELS (B3a1 TO B3a99) (B16d1 TO B16d99) (SP3a SP3b SP3c SP3d SP3e SP3f SP4v SP5)
-#   /OPTIONS 
-#     OPEN=YES
-#     HYPERLINKS=YES
-#     DETAILMISSING=IFANY
-#     NTEXTVALS=5
-#     OVERWRITE=YES.
-# *  /INSTALL.
-
-
-
-
-#' @param outfile Path to write codebook to. May be omitted if `open = TRUE` (the
-#'   default), in which case the codebook will be written to a temporary file and
-#'   opened in Excel.
-#' @param datafile Path to SPSS data file to be summarized. If omitted, the active dataset
-#'   will be used. (With very large files, it can be faster to specify a data path
-#'   instead of using the active dataset.)
-#' @param open Should the codebook be opened after writing?
-#' @param split_var_labels A set or sets of variables whose labels begin with a
-#'   common stem that should be extracted into a separate column.
-#' @param name Name of the dataset to display in workbook headers.
-#' @param hyperlinks If `TRUE`, variable names on the Overview sheet will link
-#'   to corresponding rows on summary tabs and vice versa.
-#' @param by Column or columns to group by. If specified, additional numeric
-#'   and categorical summary tabs will be included with decked heads for specified
-#'   groups.
-#' @param detail_missing Include detailed missing value information on categorical
-#'   and text summary tabs?
-#' @param n_text_vals On the text summary tab, how many unique non-missing values
-#'   should be included for each variable? If there are more than `n_text_vals`
-#'   + 1 unique values, the `n_text_vals` most common non-missing values will be included.
-#' @param overwrite Overwrite existing file?
-#'
+# Author: Casey Sarapas
+# Copyright (c) 2026 Chestnut Health Systems
+# License: MIT
 
 install_lighthouse_codebook <- function() {
   cat(
