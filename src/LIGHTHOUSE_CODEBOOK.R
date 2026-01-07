@@ -1,55 +1,3 @@
-################################################################################
-#
-# (C) Copyright Casey Sarapas 2026
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the “Software”), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-#
-################################################################################
-
-LIGHTHOUSE CODEBOOK
-  [OUTFILE = 'save/path.xlsx']
-
-  [/DATA]
-     [NAME = 'dataset name']
-     [FILE = 'data/path.sav']
-
-  [/BY varlist]
-
-  [/SPLITLABELS varlist]
-
-  [/OPTIONS]
-     [OPEN = {YES**}]
-             {NO   }
-     [HYPERLINKS = {YES**}]
-                   {NO   }
-     [DETAILMISSING = {IFANY**}]
-                      {YES    }
-                      {NO     }
-     [NTEXTVALS    = {5**}]
-                     {integer}
-     [OVERWRITE    = {YES**}]
-                     {NO   }
-
-  [/INSTALL]
-
-# LIGHTHOUSE CODEBOOK.
-
 # LIGHTHOUSE CODEBOOK
 # Author: Casey Sarapas
 # Copyright (c) 2026 Chestnut Health Systems
@@ -174,7 +122,9 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
   
   dat <- haven::read_sav(datafile)
   
-  if (!is.null(group_by)) group_by <- rlang::expr(tidyselect::all_of(group_by))
+  if (!is.null(group_by)) {
+    group_by <- rlang::expr(tidyselect::all_of(!!unlist(group_by)))
+  }
   
   if (!is.null(split_var_labels)) {
     split_var_labels <- parse_split_labels(split_var_labels, vars = names(dat))
