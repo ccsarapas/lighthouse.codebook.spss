@@ -6,7 +6,7 @@ dataset or a specified data file.
 
 ## Installation
 
-Installation requies two steps. 
+Installation requires two steps. 
 
 1. Install the `LIGHTHOUSE CODEBOOK` extention bundle:
     * Download the `LIGHTHOUSE CODEBOOK` extension bundle from [GitHub](https://github.com/ccsarapas/LIGHTHOUSE_CODEBOOK/releases).
@@ -42,7 +42,7 @@ LIGHTHOUSE CODEBOOK
 ```
 All arguments are optional.
 
-* **OUTFILE**: Path to write codebook to. May be omitted if **OPEN = YES` (which is 
+* **OUTFILE**: Path to write codebook to. May be omitted if `OPEN = YES` (which is 
 the default), in which case the codebook will be written to a temporary file and 
 immediately opened in Excel.
 
@@ -63,7 +63,7 @@ summary tabs will be included with decked heads grouped by variables specified i
 **/SPLITLABELS Subcommand**
 
 * List of variables whose labels begin with a common stem that should be extracted 
-into a separate column. (For example, 5 variables whose label all begin with "Select 
+into a separate column. (For example, 5 variables whose labels all begin with "Select 
 all that apply: ").
 
 **/OPTIONS Subcommand**
@@ -92,11 +92,9 @@ be included for each variable? (Additional unique values will be collapsed.)
 ```
 * Create codebook with default settings and no grouping. Will be saved to temp
 * directory and opened in Excel.
-
 LIGHTHOUSE CODEBOOK.
 
 * Create codebook with name, grouped summaries and save to specified path.
-
 LIGHTHOUSE CODEBOOK
   OUTFILE = 'C:/Users/username/My Folder/codebook.xlsx'
   /DATA NAME = 'Project Dataset'
@@ -104,7 +102,6 @@ LIGHTHOUSE CODEBOOK
 
 * Create codebook from existing file; don't include hyperlinks; change
 * number of text values shown; don't open in Excel.
-
 LIGHTHOUSE CODEBOOK
   OUTFILE = 'C:/Users/username/My Folder/codebook.xlsx'
   /DATA
