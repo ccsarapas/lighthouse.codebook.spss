@@ -81,6 +81,12 @@ be included for each variable? (Additional unique values will be collapsed.)
 
 * **OVERWRITE**: Overwrite existing codebook file?
 
+**/INSTALL Subcommand**
+
+* If present, will install or re-install the `lighthouse.codebook` package and dependecies 
+  into SPSS's R environment. No codebook will be generated and all other arguments
+  will be ignored when `/INSTALL` is present.
+
 ## Examples
 
 ```
