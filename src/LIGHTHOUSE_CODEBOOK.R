@@ -71,7 +71,7 @@ install_lighthouse_codebook <- function() {
   if (!requireNamespace("remotes", quietly = TRUE)) {
     install.packages("remotes", repos = "https://cloud.r-project.org")
   }
-  remotes::install_github("ccsarapas/lighthouse.codebook")
+  remotes::install_github("ccsarapas/lighthouse.codebook", upgrade = TRUE)
 }
 
 parse_split_labels <- function(x, vars) {
