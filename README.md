@@ -64,7 +64,8 @@ summary tabs will be included with decked heads grouped by variables specified i
 
 * List of variables whose labels begin with a common stem that should be extracted 
 into a separate column. (For example, 5 variables whose labels all begin with "Select 
-all that apply: ").
+all that apply: "). Multiple sets of variables whose labels begin with different 
+stems can be specified by enclosing each set in parentheses. See examples below.
 
 **/OPTIONS Subcommand**
 
@@ -89,6 +90,8 @@ be included for each variable? (Additional unique values will be collapsed.)
 
 ## Examples
 
+### Codebook creation, grouping, and options
+
 ```
 * Create codebook with default settings and no grouping. Will be saved to temp
 * directory and opened in Excel.
@@ -112,5 +115,58 @@ LIGHTHOUSE CODEBOOK
     HYPERLINKS = NO
     NTEXTVALS = 10.
 ```
-    
-  
+
+### SPLITLABELS Subcommand
+Consider a dataset including variables with these labels:
+
+| Name | Label |
+|------|-------|
+| id | Subject ID |
+| food1 | What foods do you like? (Select all that apply) - Yams |
+| food2 | What foods do you like? (Select all that apply) - Clams |
+| food3 | What foods do you like? (Select all that apply) - Hams |
+| age | How old are you? |
+| color1 | What is your favorite color? - Off-White |
+| color2 | What is your favorite color? - Eggshell |
+| color3 | What is your favorite color? - Cream |
+| color4 | What is your favorite color? - Taupe |
+
+The labels for `food1`, `food2`, and `food3` share a long common stem, making it 
+harder to see the unique content of each variable at a glance. We can use the `SPLITLABELS` 
+subcommand to extract the common stems into separate columns.
+```
+LIGHTHOUSE CODEBOOK
+  /SPLITLABELS food1 TO food3.
+```
+The resulting codebook will include:
+
+| Name | Label Stem | Label |
+|------|------------|-------|
+| id | | Subject ID |
+| food1 | What foods do you like? (Select all that apply) -  | Yams |
+| food2 | What foods do you like? (Select all that apply) -  | Clams |
+| food3 | What foods do you like? (Select all that apply) -  | Hams |
+| age | | How old are you? |
+| color1 | | What is your favorite color? - Off-White |
+| color2 | | What is your favorite color? - Eggshell |
+| color3 | | What is your favorite color? - Cream |
+| color4 | | What is your favorite color? - Taupe |
+
+Multiple sets of variables whose labels have different common stems can be specified
+by enclosing each set in parentheses.
+```
+LIGHTHOUSE CODEBOOK
+  /SPLITLABELS (food1 TO food3) (color1 TO color4).
+```
+which yields:
+
+| Name | Label Stem | Label |
+|------|------------|-------|
+| id | | Subject ID |
+| food1 | What foods do you like? (Select all that apply) - | Yams |
+| food2 | What foods do you like? (Select all that apply) - | Clams |
+| food3 | What foods do you like? (Select all that apply) - | Hams |
+| color1 | What is your favorite color? - | Off-White |
+| color2 | What is your favorite color? - | Eggshell |
+| color3 | What is your favorite color? - | Cream |
+| color4 | What is your favorite color? - | Taupe |
