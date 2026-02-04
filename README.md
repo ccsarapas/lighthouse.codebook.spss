@@ -17,7 +17,7 @@ Installation requires two steps.
 
 2. Install the `lighthouse.codebook` package and other dependencies into SPSS's
 R environment by running:
-    ```spss
+    ```stata
     LIGHTHOUSE CODEBOOK /INSTALL.
     ```
     You will only need to do this once, or if updating to a later version.
@@ -92,7 +92,7 @@ be included for each variable? (Additional unique values will be collapsed.)
 
 ### Codebook creation, grouping, and options
 
-```
+```stata
 * Create codebook with default settings and no grouping. Will be saved to temp
 * directory and opened in Excel.
 LIGHTHOUSE CODEBOOK.
@@ -128,13 +128,13 @@ Consider a dataset including variables with these labels:
 | age | How old are you? |
 | color1 | What is your favorite color? - Off-White |
 | color2 | What is your favorite color? - Eggshell |
-| color3 | What is your favorite color? - Cream |
+| color3 | What is your favorite color? - Ecru |
 | color4 | What is your favorite color? - Taupe |
 
 The labels for `food1`, `food2`, and `food3` share a long common stem, making it 
 harder to see the unique content of each variable at a glance. We can use the `SPLITLABELS` 
 subcommand to extract the common stems into separate columns.
-```
+```stata
 LIGHTHOUSE CODEBOOK
   /SPLITLABELS food1 TO food3.
 ```
@@ -154,7 +154,7 @@ The resulting codebook will include:
 
 Multiple sets of variables whose labels have different common stems can be specified
 by enclosing each set in parentheses.
-```
+```stata
 LIGHTHOUSE CODEBOOK
   /SPLITLABELS (food1 TO food3) (color1 TO color4).
 ```
