@@ -24,13 +24,14 @@ R environment by running:
 
 ## Usage
 
-```
+```stata
 LIGHTHOUSE CODEBOOK
   OUTFILE = 'save/path.xlsx'
   /DATA
      NAME = 'dataset name'
      FILE = 'data/path.sav'
   /BY varlist
+  /MISSINGVALS varlist ([label = ]value[, ...]) [varlist ...]
   /SPLITLABELS varlist
   /OPTIONS
      OPEN          = {YES**, NO}
@@ -60,12 +61,18 @@ of using the active dataset.)
 summary tabs will be included with decked heads grouped by variables specified in 
 `BY`.
 
+**/MISSINGVALS Subcommand**
+
+* Values, optionally with labels, to treat as user missing for specified variables. 
+[_See walkthrough and examples._](#MISSINGVALS-Subcommand)
+
 **/SPLITLABELS Subcommand**
 
 * List of variables whose labels begin with a common stem that should be extracted 
 into a separate column. (For example, 5 variables whose labels all begin with "Select 
 all that apply: "). Multiple sets of variables whose labels begin with different 
-stems can be specified by enclosing each set in parentheses. See examples below.
+stems can be specified by enclosing each set in parentheses. [_See walkthrough and 
+examples._](#SPLITLABELS-Subcommand)
 
 **/OPTIONS Subcommand**
 
@@ -88,9 +95,9 @@ be included for each variable? (Additional unique values will be collapsed.)
   into SPSS's R environment. No codebook will be generated and all other arguments
   will be ignored when `/INSTALL` is present.
 
-## Examples
+## Examples and Walkthroughs
 
-### Codebook creation, grouping, and options
+### Codebook Creation, Grouping, and Options
 
 ```stata
 * Create codebook with default settings and no grouping. Will be saved to temp
@@ -115,6 +122,43 @@ LIGHTHOUSE CODEBOOK
     HYPERLINKS = NO
     NTEXTVALS = 10.
 ```
+
+### MISSINGVALS Subcommand
+
+User missing values can be defined in the usual way (i.e., using the `MISSING VALUES` command or the Variable View tab) and will be appropriately handled by `LIGHTHOUSE CODEBOOK`. However, they can also be defined using the `MISSINGVALS` subcommand, which offers greater flexibility than SPSS's native user missing value handling. Specifically:
+* An unlimited number of discrete missing values can be specified (whereas SPSS allows only three).
+* Labels can be assigned to user missing values and will appear in codebook summaries. (e.g., `Confidential = -6, Refused = -7`.)
+* The same user missing values can be set across numeric and string variables, with automatic conversion to the appropriate type. (e.g., if `-3` is specified, it will be applied to numeric variables as `-3` and to string variables as `"-3"`.) Variable types not compatible with user missing values (e.g., dates) will be ignored.
+
+```stata
+* specifying different user missings for different sets of variables.
+* specifying same user missings across numeric and string variables.
+LIGHTHOUSE CODEBOOK
+  /MISSINGVALS numeric1 TO numeric5 (-9, -8, -7, -6, -5)
+              /numeric9 string12 string18 (-8, -3, -2, -1).
+
+* specifying user missings with labels.
+LIGHTHOUSE CODEBOOK
+  /MISSINGVALS IDScr1 TO CVScr5 ("Legitimate Skip" = -9,
+                                 "Don't Know" = -8,
+                                 "Refused" = -7,
+                                 "Confidential" = -6,
+                                 "Missing" = -4,
+                                 "Not Asked" = -3).
+
+* apply user missings to all compatible variables using `ALL` keyword.
+LIGHTHOUSE CODEBOOK
+  /MISSINGVALS ALL ("Legitimate Skip" = -9,
+                    "Don't Know" = -8,
+                    "Refused" = -7,
+                    "Confidential" = -6,
+                    "Missing" = -4,
+                    "Not Asked" = -3).
+```
+Limitations:
+* If a variable specified in `MISSINGVALS` already has user missings defined, they will be overwritten.
+* Unlike the native `MISSING VALUES` command, `MISSINGVALS` does not support specifying ranges of missing values (e.g., `-9 THRU -1` or `99 THRU HI`).
+* If either of these limitations becomes a problem, please [open an issue](https://github.com/ccsarapas/lighthouse.codebook.spss/issues) so we can consider improvements!
 
 ### SPLITLABELS Subcommand
 Consider a dataset including variables with these labels:

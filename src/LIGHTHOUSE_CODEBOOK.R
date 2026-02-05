@@ -81,6 +81,46 @@ join_tokens <- function(x, sep = " ", replace_whitespace = NULL) {
 }
 
 
+parse_user_missing <- function(x, vars) {
+  ws_placeholder <- "@WS@"
+  tokens <- x
+  x <- join_tokens(x, replace_whitespace = ws_placeholder)
+  
+  groups <- stringr::str_match_all(x, "([^()\\s].*?)\\s\\(\\s([^()\\s].*?)\\s\\)")[[1]]
+  if (paste(groups[, 1], collapse = " ") != x) {
+    stop("Invalid `/MISSINGVALS` specification.")
+  }
+  
+  unsupported <- setdiff(c("thru", "hi", "lo", "highest", "lowest"), vars)
+  unsupported <- paste(paste0("\\b", unsupported, "\\b"), collapse = "|")
+  if (any(grepl(unsupported, tolower(groups[, 3])))) {
+    cli::cli_abort(c(
+      "!" = "Missing value ranges, and use of the `THRU`, `HIGHEST`, and `LOWEST` keywords, are not supported by the `/MISSINGVALS` subcommand.",
+      "i" = "Instead, set missing value ranges using the SPSS `MISSING VALUES` command before executing `LIGHTHOUSE CODEBOOK`."
+    ))
+  }
+  var_groups <- var_grps_to_tidyselect(
+    groups[, 2],
+    vars = vars, 
+    subc = "MISSINGVALS"
+  )
+  val_groups <- stringr::str_match_all(
+    groups[, 3],
+    "(?:([^=\\s]+?)\\s=\\s)?([^=\\s]+)"
+  )
+  val_groups <- lapply(val_groups, \(grp) {
+    vals <- grp[, 3]
+    nms <- grp[, 2]
+    if (!all(is.na(nms))) {
+      nms[is.na(nms)] <- ""
+      nms <- stringr::str_replace_all(nms, stringr::fixed(ws_placeholder), " ")
+      names(vals) <- nms
+    }
+    vals
+  })
+  mapply(rlang::new_formula, var_groups, val_groups)
+}
+  
 parse_split_labels <- function(x, vars) {
   x <- join_tokens(x)
 
@@ -121,6 +161,7 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
                          dataset_name = NULL,
                          hyperlinks = c("yes", "no"),
                          group_by = NULL,
+                         user_missing = NULL,
                          detail_missing = c("ifany", "yes", "no"),
                          n_text_vals = 5,
                          overwrite = c("yes", "no")) {
@@ -159,8 +200,13 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
     split_var_labels <- parse_split_labels(split_var_labels, vars = names(dat))
   }
   
+  if (!is.null(user_missing)) {
+    user_missing <- parse_user_missing(user_missing, vars = names(dat))
+  }
+  
   dat |> 
     lighthouse.codebook::cb_create_spss(
+      .user_missing = user_missing,
       .split_var_labels = !!split_var_labels
     ) |>
     lighthouse.codebook::cb_write(
@@ -176,7 +222,7 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
   if (open) lighthouse::file.open(file)
 }
 
-Run <- function(args){
+Run <- function(args) {
   args <- args[[2]]
   if ("install" %in% tolower(names(args))) {
     install_lighthouse_codebook()
@@ -186,7 +232,7 @@ Run <- function(args){
         "OUTFILE", subc = "", ktype = "literal", var = "file"
       ),
       spsspkg.Template(
-        "NAME", subc = "DATA", ktype = "literal", var = "dataset_name"
+        "FILE", subc = "DATA", ktype = "literal", var = "datafile"
       ),
       spsspkg.Template(
         "FILE", subc = "DATA", ktype = "literal", var = "datafile"

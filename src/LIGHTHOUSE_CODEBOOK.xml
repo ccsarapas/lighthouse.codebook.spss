@@ -20,6 +20,8 @@
 
   <Subcommand Name="BY" IsArbitrary="True" Occurrence="Optional"/>
 
+  <Subcommand Name="MISSINGVALS" IsArbitrary="True" Occurrence="Optional"/>
+
   <Subcommand Name="SPLITLABELS" IsArbitrary="True" Occurrence="Optional"/>
 
   <Subcommand Name="OPTIONS" IsArbitrary="False" Occurrence="Optional">
