@@ -22,50 +22,79 @@ install_lighthouse_codebook <- function() {
   remotes::install_github("ccsarapas/lighthouse.codebook", upgrade = TRUE)
 }
 
-parse_split_labels <- function(x, vars) {
-  x <- x |>
-    unlist() |>
-    paste(collapse = " ") |>
-    trimws()
 
-  # SPSS doesn't allow "all" or "to" as var names, so don't need to check for that
-  if (stringr::str_detect(tolower(x), "^(all|\\(\\s*all\\s*\\))$")) {
-    rlang::expr(tidyselect::everything())
-  } else if (stringr::str_detect(x, "\\(|\\)")) {
+vars_to_tidyselect <- function(x, vars, subc) {
+  tokens <- strsplit(x, "\\s+")[[1]]
+  if (any(tolower(tokens) == "all")) {
+    cli::cli_abort(
+      "The ALL keyword is allowed in {subc} only if no other variables are specified."
+    )
+  }
+  to_locs <- which(tolower(tokens) == "to")
+  not_found <- setdiff(tokens[-to_locs], vars)
+  if (length(not_found)) {
+    msg <- c(
+      "!" = "The following {cli::qty(length(not_found))} variable{?s} {?was/were} not found in the dataset:",
+      "*" = toString(not_found)
+    )
+    wrong_case <- vars[tolower(vars) %in% tolower(not_found)]
+    if (length(wrong_case)) {
+      msg <- c(
+        msg,
+        "*" = "Note that variable names are case sensitive. Did you mean:",
+        "*" = toString(wrong_case)
+      )
+    }
+    cli::cli_abort(msg)
+  }
+  if (length(to_locs)) {
+    if (
+      any(to_locs %in% c(1, length(tokens))) || # TO at beginning or end
+        any(diff(to_locs) < 3) # `a TO b TO c` or `a TO TO b`
+    ) {
+      cli::cli_abort("Invalid use of TO keyword in {subc}.")
+    }
+    tokens <- to_locs |>
+      lapply(\(loc) {
+        vars[seq(match(tokens[loc - 1], vars), match(tokens[loc + 1], vars))]
+      }) |>
+      unlist() |>
+      union(tokens[-to_locs])
+  }
+  rlang::expr(tidyselect::all_of(!!tokens))
+}
+
+var_grps_to_tidyselect <- function(x, vars, subc) {
+  if (length(x) == 1 && tolower(x) == "all") {
+    list(rlang::expr(tidyselect::everything()))
+  } else {
+    lapply(x, vars_to_tidyselect, vars = vars, subc = subc)
+  }
+}
+
+join_tokens <- function(x, sep = " ", replace_whitespace = NULL) {
+  x <- unlist(x)
+  if (!is.null(replace_whitespace)) {
+    x <- stringr::str_replace_all(x, "\\s", replace_whitespace)
+  }
+  trimws(paste(x, collapse = sep))
+}
+
+
+parse_split_labels <- function(x, vars) {
+  x <- join_tokens(x)
+
+  if (stringr::str_detect(x, "\\(|\\)")) {
     if (!stringr::str_detect(x, "^(?:\\([^()]*\\S[^()]*\\)\\s*)+$")) {
       stop(
         "If parens are used to group variables for SPLITLABELS, all variables ",
         "must be enclosed in parens."
       )
     }
-    groups <- stringr::str_match_all(x, "\\(([^()]*\\S[^()]*)\\)")[[1]][, 2]
-    out <- lapply(groups, parse_split_labels, vars = vars)
-    rlang::expr(list(!!!out))
-  } else {
-    tokens <- strsplit(x, "\\s+")[[1]]
-    if (any(tolower(tokens) == "all")) {
-      stop(
-        "The ALL keyword is allowed in SPLITLABELS only if no other variables ",
-        "are specified."
-      )
-    }
-    to_locs <- which(tolower(tokens) == "to")
-    if (length(to_locs)) {
-      if (
-        any(to_locs %in% c(1, length(tokens))) || # TO at beginning or end
-          any(diff(to_locs) < 3) # `a TO b TO c` or `a TO TO b`
-      ) {
-        stop("Invalid use of TO keyword in SPLITLABELS.")
-      }
-      tokens <- to_locs |>
-        lapply(\(loc) {
-          vars[seq(match(tokens[loc - 1], vars), match(tokens[loc + 1], vars))]
-        }) |>
-        unlist() |>
-        union(tokens[-to_locs])
-    }
-    rlang::expr(tidyselect::all_of(!!tokens))
+    x <- stringr::str_match_all(x, "\\(\\s([^()]*\\S[^()]*)\\s\\)")[[1]][, 2]
   }
+  out <- var_grps_to_tidyselect(x, vars = vars, subc = "SPLITLABELS")
+  rlang::expr(list(!!!out))
 }
 
 tempfile_from_active <- function() {
