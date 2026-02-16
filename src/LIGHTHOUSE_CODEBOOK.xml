@@ -18,7 +18,12 @@
     <Parameter Name="FILE" ParameterType="InputFile"/>
   </Subcommand>
 
-  <Subcommand Name="BY" IsArbitrary="True" Occurrence="Optional"/>
+  <Subcommand Name="GROUP" IsArbitrary="False" Occurrence="Optional">
+    <Parameter Name="BY" ParameterType="VariableNameList"/>
+    <Parameter Name="ROWS" ParameterType="VariableNameList"/>
+    <Parameter Name="ROWSNUM" ParameterType="VariableNameList"/>
+    <Parameter Name="ROWSCAT" ParameterType="VariableNameList"/>
+  </Subcommand>
 
   <Subcommand Name="MISSINGVALS" IsArbitrary="True" Occurrence="Optional"/>
 

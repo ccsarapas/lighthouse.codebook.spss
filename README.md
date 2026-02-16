@@ -30,7 +30,11 @@ LIGHTHOUSE CODEBOOK
   /DATA
      NAME = 'dataset name'
      FILE = 'data/path.sav'
-  /BY varlist
+  /GROUP 
+     BY = varlist
+     ROWS = varlist
+     ROWSNUM = varlist
+     ROWSCAT = varlist
   /MISSINGVALS varlist ([label = ]value[, ...]) [varlist ...]
   /SPLITLABELS varlist
   /OPTIONS
@@ -57,11 +61,23 @@ immediately opened in Excel.
 will be used. (With very large files, it can be faster to specify a data path instead 
 of using the active dataset.)
 
-**/BY Subcommand**
+**/GROUP Subcommand**
 
-* List of variables to group by. If specified, additional numeric and categorical 
-summary tabs will be included with decked heads grouped by variables specified in 
-`BY`.
+* **BY**: List of variables to group by. If specified, additional numeric and categorical 
+summary tabs will be included with grouped summaries. Subgroups will be shown in 
+columns by default. Some or all grouping variables can instead be shown in rows 
+if specified using the `ROWS`, `ROWSNUM`, or `ROWSCAT` parameters.
+
+* **ROWS**: List of variables to group by in rows on grouped summary tabs. Note 
+that all variables included in `ROWS` must also be included in `BY`. This will apply 
+to both numeric and categorical summary tabs unless otherwise specified using the
+`ROWSNUM` or `ROWSCAT` parameters.
+
+* **ROWSNUM**: List of variables to group by in rows on grouped _numeric_ summary 
+tabs. Note that all variables included in `ROWSNUM` must also be included in `BY`.
+
+* **ROWSCAT**: List of variables to group by in rows on grouped _categorical_ summary 
+tabs. Note that all variables included in `ROWSCAT` must also be included in `BY`.
 
 **/MISSINGVALS Subcommand**
 

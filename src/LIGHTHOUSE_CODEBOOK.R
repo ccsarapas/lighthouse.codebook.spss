@@ -160,6 +160,9 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
                          split_var_labels = NULL,
                          dataset_name = NULL,
                          group_by = NULL,
+                         group_rows = NULL,
+                         group_rows_numeric = group_rows,
+                         group_rows_categorical = group_rows,
                          user_missing = NULL,
                          detail_missing = c("ifany", "yes", "no"),
                          n_text_vals = 5,
@@ -196,6 +199,23 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
   
   dat <- haven::read_sav(datafile, user_na = TRUE)
   
+  group_row_args <- list(ROWS = group_rows, ROWSNUM = group_rows_numeric, 
+                         ROWSCAT = group_rows_categorical)
+  for (nm in names(group_row_args)) {
+    arg_val <- group_row_args[[nm]]
+    if (!is.null(arg_val)) {
+      if (is.null(group_by)) {
+        cli::cli_abort("If {nm} is specified, BY must also be specified.")
+      }
+      if (length(setdiff(arg_val, group_by))) {
+        cli::cli_abort(
+          "All variables specified in {nm} must also be included in BY."
+        )
+      }
+      group_row_args[[nm]] <- rlang::expr(tidyselect::all_of(!!unlist(arg_val)))
+    }
+  }
+  
   if (!is.null(group_by)) {
     group_by <- rlang::expr(tidyselect::all_of(!!unlist(group_by)))
   }
@@ -221,6 +241,9 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
       file,
       dataset_name = dataset_name,
       group_by = !!group_by, 
+      group_rows = !!group_row_args$ROWS,
+      group_rows_numeric = !!group_row_args$ROWSNUM,
+      group_rows_categorical = !!group_row_args$ROWSCAT,
       detail_missing = detail_missing,
       n_text_vals = n_text_vals,
       hyperlinks = hyperlinks,
@@ -247,8 +270,20 @@ Run <- function(args) {
         "FILE", subc = "DATA", ktype = "literal", var = "datafile"
       ),
       spsspkg.Template(
-        "", subc = "BY", ktype = "existingvarlist", var = "group_by", 
+        "BY", subc = "GROUP", ktype = "existingvarlist", var = "group_by", 
         islist = TRUE
+      ),
+      spsspkg.Template(
+        "ROWS", subc = "GROUP", ktype = "existingvarlist", var = "group_rows", 
+        islist = TRUE
+      ),
+      spsspkg.Template(
+        "ROWSNUM", subc = "GROUP", ktype = "existingvarlist", 
+        var = "group_rows_numeric", islist = TRUE
+      ),
+      spsspkg.Template(
+        "ROWSCAT", subc = "GROUP", ktype = "existingvarlist", 
+        var = "group_rows_categorical", islist = TRUE
       ),
       spsspkg.Template(
         "", subc = "MISSINGVALS", ktype = "literal", var = "user_missing",
@@ -287,7 +322,6 @@ Run <- function(args) {
         vallist = list("yes", "no")
       )
     ))
-
     spsspkg.processcmd(oobj, args, "cb_from_spss")
   }
 }
