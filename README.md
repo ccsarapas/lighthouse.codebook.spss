@@ -37,6 +37,8 @@ LIGHTHOUSE CODEBOOK
      OPEN          = {YES**, NO}
      DETAILMISSING = {IFANY**, YES, NO}
      NTEXTVALS     = {5**, integer}
+     RMVHTML       = {YES**, NO}
+     RMVLINEBREAKS = {YES**, NO}
      HYPERLINKS    = {YES**, NO}
      OVERWRITE     = {YES**, NO}
   /INSTALL
@@ -83,6 +85,12 @@ text summary tabs?
 
 * **NTEXTVALS**: On the text summary tab, how many unique non-missing values should 
 be included for each variable? (Additional unique values will be collapsed.)
+
+* **RMVHTML**: If `YES`, HTML tags (e.g., "<i>", "<strong>") will be removed from 
+variable and value labels.
+
+* **RMVLINEBREAKS**: If `YES`, line breaks in variable and value will be replaced 
+with " / ".
 
 * **HYPERLINKS**: If `YES`, variable names on the Overview sheet will link to 
 corresponding rows on summary tabs and vice versa.
@@ -131,8 +139,7 @@ User missing values can be defined in the usual way (i.e., using the `MISSING VA
 * The same user missing values can be set across numeric and string variables, with automatic conversion to the appropriate type. (e.g., if `-3` is specified, it will be applied to numeric variables as `-3` and to string variables as `"-3"`.) Variable types not compatible with user missing values (e.g., dates) will be ignored.
 
 ```stata
-* specifying different user missings for different sets of variables.
-* specifying same user missings across numeric and string variables.
+* basic usage.
 LIGHTHOUSE CODEBOOK
   /MISSINGVALS numeric1 TO numeric5 (-9, -8, -7, -6, -5)
               /numeric9 string12 string18 (-8, -3, -2, -1).

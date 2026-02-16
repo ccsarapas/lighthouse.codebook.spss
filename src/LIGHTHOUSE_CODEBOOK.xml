@@ -35,6 +35,14 @@
       <EnumValue Name="NO"/>
     </Parameter>
     <Parameter Name="NTEXTVALS" ParameterType="Integer"/>
+    <Parameter Name="RMVHTML" ParameterType="Keyword">
+      <EnumValue Name="YES"/>
+      <EnumValue Name="NO"/>
+    </Parameter>
+    <Parameter Name="RMVLINEBREAKS" ParameterType="Keyword">
+      <EnumValue Name="YES"/>
+      <EnumValue Name="NO"/>
+    </Parameter>
     <Parameter Name="HYPERLINKS" ParameterType="Keyword">
       <EnumValue Name="YES"/>
       <EnumValue Name="NO"/>

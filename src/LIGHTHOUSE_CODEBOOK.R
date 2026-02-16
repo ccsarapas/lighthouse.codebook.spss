@@ -163,10 +163,14 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
                          user_missing = NULL,
                          detail_missing = c("ifany", "yes", "no"),
                          n_text_vals = 5,
+                         rmv_html = c("yes", "no"),
+                         rmv_line_breaks = c("yes", "no"),
                          hyperlinks = c("yes", "no"),
                          overwrite = c("yes", "no")) {
   open <- match.arg(open) == "yes"
   detail_missing <- sub("ifany", "if_any", match.arg(detail_missing))
+  rmv_html <- match.arg(rmv_html) == "yes"
+  rmv_line_breaks <- match.arg(rmv_line_breaks) == "yes"
   hyperlinks <- match.arg(hyperlinks) == "yes"
   overwrite <- match.arg(overwrite) == "yes"
   
@@ -207,7 +211,11 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
   dat |> 
     lighthouse.codebook::cb_create_spss(
       .user_missing = user_missing,
-      .split_var_labels = !!split_var_labels
+      .split_var_labels = !!split_var_labels,
+      .options = lighthouse.codebook::cb_create_options(
+        rmv_html = rmv_html,
+        rmv_line_breaks = rmv_line_breaks
+      )
     ) |>
     lighthouse.codebook::cb_write(
       file,
@@ -261,6 +269,14 @@ Run <- function(args) {
       spsspkg.Template(
         "NTEXTVALS", subc = "OPTIONS", ktype = "int", var = "n_text_vals",
         vallist = list(0)
+      ),
+      spsspkg.Template(
+        "RMVHTML", subc = "OPTIONS", ktype = "str", var = "rmv_html",
+        vallist = list("yes", "no")
+      ),
+      spsspkg.Template(
+        "RMVLINEBREAKS", subc = "OPTIONS", ktype = "str", var = "rmv_line_breaks",
+        vallist = list("yes", "no")
       ),
       spsspkg.Template(
         "HYPERLINKS", subc = "OPTIONS", ktype = "str", var = "hyperlinks",
