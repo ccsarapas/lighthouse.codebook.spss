@@ -35,9 +35,9 @@ LIGHTHOUSE CODEBOOK
   /SPLITLABELS varlist
   /OPTIONS
      OPEN          = {YES**, NO}
-     HYPERLINKS    = {YES**, NO}
      DETAILMISSING = {IFANY**, YES, NO}
      NTEXTVALS     = {5**, integer}
+     HYPERLINKS    = {YES**, NO}
      OVERWRITE     = {YES**, NO}
   /INSTALL
 ```
@@ -78,14 +78,14 @@ examples._](#SPLITLABELS-Subcommand)
 
 * **OPEN**: Should the codebook be immediately opened in Excel?
 
-* **HYPERLINKS**: If `YES`, variable names on the Overview sheet will link to 
-corresponding rows on summary tabs and vice versa.
-
 * **DETAILMISSING**: Include detailed missing value information on categorical and 
 text summary tabs?
 
 * **NTEXTVALS**: On the text summary tab, how many unique non-missing values should 
 be included for each variable? (Additional unique values will be collapsed.)
+
+* **HYPERLINKS**: If `YES`, variable names on the Overview sheet will link to 
+corresponding rows on summary tabs and vice versa.
 
 * **OVERWRITE**: Overwrite existing codebook file?
 

@@ -159,15 +159,15 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
                          open = c("yes", "no"),
                          split_var_labels = NULL,
                          dataset_name = NULL,
-                         hyperlinks = c("yes", "no"),
                          group_by = NULL,
                          user_missing = NULL,
                          detail_missing = c("ifany", "yes", "no"),
                          n_text_vals = 5,
+                         hyperlinks = c("yes", "no"),
                          overwrite = c("yes", "no")) {
   open <- match.arg(open) == "yes"
-  hyperlinks <- match.arg(hyperlinks) == "yes"
   detail_missing <- sub("ifany", "if_any", match.arg(detail_missing))
+  hyperlinks <- match.arg(hyperlinks) == "yes"
   overwrite <- match.arg(overwrite) == "yes"
   
   if (!requireNamespace("lighthouse.codebook", quietly = TRUE)) {
@@ -215,6 +215,7 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
       group_by = !!group_by, 
       detail_missing = detail_missing,
       n_text_vals = n_text_vals,
+      hyperlinks = hyperlinks,
       overwrite = overwrite
     )
   cat("Codebook written to", file, "\n")
@@ -254,16 +255,16 @@ Run <- function(args) {
         vallist = list("yes", "no")
       ),
       spsspkg.Template(
-        "HYPERLINKS", subc = "OPTIONS", ktype = "str", var = "hyperlinks",
-        vallist = list("yes", "no")
-      ),
-      spsspkg.Template(
         "DETAILMISSING", subc = "OPTIONS", ktype = "str", var = "detail_missing",
         vallist = list("ifany", "yes", "no")
       ),
       spsspkg.Template(
         "NTEXTVALS", subc = "OPTIONS", ktype = "int", var = "n_text_vals",
         vallist = list(0)
+      ),
+      spsspkg.Template(
+        "HYPERLINKS", subc = "OPTIONS", ktype = "str", var = "hyperlinks",
+        vallist = list("yes", "no")
       ),
       spsspkg.Template(
         "OVERWRITE", subc = "OPTIONS", ktype = "str", var = "overwrite",
