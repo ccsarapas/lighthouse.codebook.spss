@@ -232,13 +232,17 @@ Run <- function(args) {
         "OUTFILE", subc = "", ktype = "literal", var = "file"
       ),
       spsspkg.Template(
-        "FILE", subc = "DATA", ktype = "literal", var = "datafile"
+        "NAME", subc = "DATA", ktype = "literal", var = "dataset_name"
       ),
       spsspkg.Template(
         "FILE", subc = "DATA", ktype = "literal", var = "datafile"
       ),
       spsspkg.Template(
         "", subc = "BY", ktype = "existingvarlist", var = "group_by", 
+        islist = TRUE
+      ),
+      spsspkg.Template(
+        "", subc = "MISSINGVALS", ktype = "literal", var = "user_missing",
         islist = TRUE
       ),
       spsspkg.Template(
