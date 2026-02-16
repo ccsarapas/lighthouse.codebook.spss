@@ -194,7 +194,7 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
     on.exit(unlink(datafile, force = TRUE))
   }
   
-  dat <- haven::read_sav(datafile)
+  dat <- haven::read_sav(datafile, user_na = TRUE)
   
   if (!is.null(group_by)) {
     group_by <- rlang::expr(tidyselect::all_of(!!unlist(group_by)))
