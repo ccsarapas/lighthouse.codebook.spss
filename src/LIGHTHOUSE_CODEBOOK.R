@@ -4,11 +4,13 @@
 # License: MIT
 
 install_lighthouse_codebook <- function() {
+  installed <- requireNamespace("lighthouse.codebook", quietly = TRUE)
+  action <- if (installed) "Updating" else "Installing"
   cat(
     "",
     "********************************************************************************",
     "",
-    "  Installing lighthouse.codebook and dependencies, including:",
+    paste0("  ", action, " lighthouse.codebook and dependencies, including:"),
     "    - lighthouse.codebook (https://github.com/ccsarapas/lighthouse.codebook)",
     "    - lighthouse (https://github.com/ccsarapas/lighthouse)",
     "",
@@ -21,7 +23,6 @@ install_lighthouse_codebook <- function() {
   }
   remotes::install_github("ccsarapas/lighthouse.codebook", upgrade = TRUE)
 }
-
 
 vars_to_tidyselect <- function(x, vars, subc) {
   tokens <- strsplit(x, "\\s+")[[1]]
@@ -154,6 +155,33 @@ tempfile_from_active <- function() {
   temp_path
 }
 
+check_lighthouse_codebook_pkg <- function(min_ver = package_version("0.3.2")) {
+  msg1 <- NULL
+  if (!requireNamespace("lighthouse.codebook", quietly = TRUE)) {
+    msg1 <- paste0(
+      "  The lighthouse.codebook package must be installed in SPSS's R environment \n",
+      "  before this command can be used."
+    )
+    msg2 <- "  -> To install lighthouse.codebook from GitHub, run:"
+  } else if (packageVersion("lighthouse.codebook") < min_ver) {
+    msg1 <- paste0(
+      "  The lighthouse.codebook package in SPSS's R environment must be updated to \n",
+      "  version ", min_ver, " or later before this command can be used."
+    )
+    msg2 <- "  -> To update lighthouse.codebook, run:"
+  }
+  if (!is.null(msg1)) {
+    stop(paste(
+      "\n********************************************************************************",
+      msg1,
+      msg2,
+      "      LIGHTHOUSE CODEBOOK /INSTALL.",
+      "********************************************************************************",
+      sep = "\n\n"
+    ))
+  }
+}
+
 cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
                          datafile = NULL,
                          open = c("yes", "no"),
@@ -177,18 +205,7 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
   hyperlinks <- match.arg(hyperlinks) == "yes"
   overwrite <- match.arg(overwrite) == "yes"
   
-  if (!requireNamespace("lighthouse.codebook", quietly = TRUE)) {
-    stop(
-      "\n",
-      "********************************************************************************\n\n",
-      "  The lighthouse.codebook package must be installed in SPSS's R environment \n",
-      "  before this command can be used.\n\n",
-      "  -> To install lighthouse.codebook from GitHub, run:\n\n",
-      "      LIGHTHOUSE CODEBOOK /INSTALL.\n\n",
-      "  -> You will only need to do this once.\n\n",
-      "********************************************************************************\n\n"
-    )
-  }
+  check_lighthouse_codebook_pkg()
   
   if (missing(file) && !open) stop("OUTFILE must be specified if OPEN=NO.")
   

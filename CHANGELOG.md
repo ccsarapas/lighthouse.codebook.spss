@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Options to group numeric and/or categorical summary tabs by rows by using the 
     `/GROUP` subcommand with the `ROWS`, `ROWSNUM`, or `ROWSCAT` parameters.
 
+- Check for minimum required version of lighthouse.codebook package.
+
 ### Changed
 
 - `/BY` is no longer a subcommand; it is now a parameter for the `/GROUP` subcommand,
