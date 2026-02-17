@@ -171,7 +171,7 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
                          hyperlinks = c("yes", "no"),
                          overwrite = c("yes", "no")) {
   open <- match.arg(open) == "yes"
-  detail_missing <- sub("ifany", "if_any", match.arg(detail_missing))
+  detail_missing <- sub("ifany", "if_any_user_missing", match.arg(detail_missing))
   rmv_html <- match.arg(rmv_html) == "yes"
   rmv_line_breaks <- match.arg(rmv_line_breaks) == "yes"
   hyperlinks <- match.arg(hyperlinks) == "yes"
@@ -212,13 +212,13 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
           "All variables specified in {nm} must also be included in BY."
         )
       }
-      group_row_args[[nm]] <- rlang::expr(tidyselect::all_of(!!unlist(arg_val)))
+      group_row_args[[nm]] <- unlist(arg_val)
+    } else if (nm != "ROWS") {
+      group_row_args[[nm]] <- group_row_args$ROWS
     }
   }
   
-  if (!is.null(group_by)) {
-    group_by <- rlang::expr(tidyselect::all_of(!!unlist(group_by)))
-  }
+  if (!is.null(group_by)) group_by <- unlist(group_by)
   
   if (!is.null(split_var_labels)) {
     split_var_labels <- parse_split_labels(split_var_labels, vars = names(dat))
@@ -229,7 +229,7 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
   }
   
   dat |> 
-    lighthouse.codebook::cb_create_spss(
+    lighthouse.codebook:::cb_create_spss_impl(
       .user_missing = user_missing,
       .split_var_labels = !!split_var_labels,
       .options = lighthouse.codebook::cb_create_options(
@@ -237,13 +237,13 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
         rmv_line_breaks = rmv_line_breaks
       )
     ) |>
-    lighthouse.codebook::cb_write(
+    lighthouse.codebook:::cb_write_impl(
       file,
       dataset_name = dataset_name,
-      group_by = !!group_by, 
-      group_rows = !!group_row_args$ROWS,
-      group_rows_numeric = !!group_row_args$ROWSNUM,
-      group_rows_categorical = !!group_row_args$ROWSCAT,
+      group_by = group_by, 
+      group_rows = group_row_args$ROWS,
+      group_rows_numeric = group_row_args$ROWSNUM,
+      group_rows_categorical = group_row_args$ROWSCAT,
       detail_missing = detail_missing,
       n_text_vals = n_text_vals,
       hyperlinks = hyperlinks,
