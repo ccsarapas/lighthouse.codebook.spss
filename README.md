@@ -66,7 +66,8 @@ of using the active dataset.)
 * **BY**: List of variables to group by. If specified, additional numeric and categorical 
 summary tabs will be included with grouped summaries. Subgroups will be shown in 
 columns by default. Some or all grouping variables can instead be shown in rows 
-if specified using the `ROWS`, `ROWSNUM`, or `ROWSCAT` parameters.
+if specified using the `ROWS`, `ROWSNUM`, or `ROWSCAT` parameters. [_See walkthrough 
+and examples._](#GROUP-Subcommand)
 
 * **ROWS**: List of variables to group by in rows on grouped summary tabs. Note 
 that all variables included in `ROWS` must also be included in `BY`. This will apply 
@@ -102,7 +103,7 @@ text summary tabs?
 * **NTEXTVALS**: On the text summary tab, how many unique non-missing values should 
 be included for each variable? (Additional unique values will be collapsed.)
 
-* **RMVHTML**: If `YES`, HTML tags (e.g., "<i>", "<strong>") will be removed from 
+* **RMVHTML**: If `YES`, HTML tags (e.g., "&lt;i&gt;", "&lt;strong&gt;") will be removed from 
 variable and value labels.
 
 * **RMVLINEBREAKS**: If `YES`, line breaks in variable and value will be replaced 
@@ -115,24 +116,23 @@ corresponding rows on summary tabs and vice versa.
 
 **/INSTALL Subcommand**
 
-* If present, will install or re-install the `lighthouse.codebook` package and dependecies 
+* If present, will install or update the `lighthouse.codebook` package and dependecies 
   into SPSS's R environment. No codebook will be generated and all other arguments
   will be ignored when `/INSTALL` is present.
 
 ## Examples and Walkthroughs
 
-### Codebook Creation, Grouping, and Options
+### Codebook Creation and Basic Options
 
 ```stata
 * Create codebook with default settings and no grouping. Will be saved to temp
 * directory and opened in Excel.
 LIGHTHOUSE CODEBOOK.
 
-* Create codebook with name, grouped summaries and save to specified path.
+* Create codebook with name and save to specified path.
 LIGHTHOUSE CODEBOOK
   OUTFILE = 'C:/Users/username/My Folder/codebook.xlsx'
-  /DATA NAME = 'Project Dataset'
-  /BY XRA XOBS.
+  /DATA NAME = 'Project Dataset'.
 
 * Create codebook from existing file; don't include hyperlinks; change
 * number of text values shown; don't open in Excel.
@@ -145,6 +145,50 @@ LIGHTHOUSE CODEBOOK
     OPEN = NO
     HYPERLINKS = NO
     NTEXTVALS = 10.
+```
+
+### GROUP Subcommand
+
+Numeric and categorical data summaries can be grouped by one or more variables by 
+specifying them in the `GROUP` subcommand.
+
+```stata
+* use the BY parameter to specify grouping variables.
+LIGHTHOUSE CODEBOOK
+  /GROUP BY = treatment_group timepoint.
+```
+
+By default, values for each subgroup are shown in separate columns, with decked 
+heads if more than one grouping variable is specified. However, some or all grouping 
+variables can instead be shown in rows using the `ROWS` parameter.
+
+```stata
+* show `treatment_group` in columns and `timepoint` in rows.
+* note all grouping variables must still be included in `BY`.
+LIGHTHOUSE CODEBOOK
+  /GROUP 
+    BY = treatment_group timepoint
+    ROWS = timepoint.
+```
+
+Different row grouping behavior can be specified for numeric versus categorical 
+summary tabs using the `ROWSNUM` and `ROWSCAT` parameters.
+
+```stata
+* on numeric summary tab, show `treatment_group` in columns and `timepoint` in rows;
+* but on categorical summary tab, show all grouping variables in columns.
+LIGHTHOUSE CODEBOOK
+  /GROUP 
+    BY = treatment_group timepoint
+    ROWSNUM = timepoint.
+
+* for numeric summary, show all grouping variables in rows; 
+* for categorical summary, show `treatment_group` in rows.
+LIGHTHOUSE CODEBOOK
+  /GROUP 
+    BY = treatment_group timepoint
+    ROWSNUM = treatment_group timepoint
+    ROWSCAT = treatment_group.
 ```
 
 ### MISSINGVALS Subcommand
