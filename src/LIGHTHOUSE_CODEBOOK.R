@@ -4,11 +4,13 @@
 # License: MIT
 
 install_lighthouse_codebook <- function() {
+  installed <- requireNamespace("lighthouse.codebook", quietly = TRUE)
+  action <- if (installed) "Updating" else "Installing"
   cat(
     "",
     "********************************************************************************",
     "",
-    "  Installing lighthouse.codebook and dependencies, including:",
+    paste0("  ", action, " lighthouse.codebook and dependencies, including:"),
     "    - lighthouse.codebook (https://github.com/ccsarapas/lighthouse.codebook)",
     "    - lighthouse (https://github.com/ccsarapas/lighthouse)",
     "",
@@ -22,50 +24,118 @@ install_lighthouse_codebook <- function() {
   remotes::install_github("ccsarapas/lighthouse.codebook", upgrade = TRUE)
 }
 
-parse_split_labels <- function(x, vars) {
-  x <- x |>
-    unlist() |>
-    paste(collapse = " ") |>
-    trimws()
+vars_to_tidyselect <- function(x, vars, subc) {
+  tokens <- strsplit(x, "\\s+")[[1]]
+  if (any(tolower(tokens) == "all")) {
+    cli::cli_abort(
+      "The ALL keyword is allowed in {subc} only if no other variables are specified."
+    )
+  }
+  to_locs <- which(tolower(tokens) == "to")
+  not_found <- setdiff(tokens[-to_locs], vars)
+  if (length(not_found)) {
+    msg <- c(
+      "!" = "The following {cli::qty(length(not_found))} variable{?s} {?was/were} not found in the dataset:",
+      "*" = toString(not_found)
+    )
+    wrong_case <- vars[tolower(vars) %in% tolower(not_found)]
+    if (length(wrong_case)) {
+      msg <- c(
+        msg,
+        "*" = "Note that variable names are case sensitive. Did you mean:",
+        "*" = toString(wrong_case)
+      )
+    }
+    cli::cli_abort(msg)
+  }
+  if (length(to_locs)) {
+    if (
+      any(to_locs %in% c(1, length(tokens))) || # TO at beginning or end
+        any(diff(to_locs) < 3) # `a TO b TO c` or `a TO TO b`
+    ) {
+      cli::cli_abort("Invalid use of TO keyword in {subc}.")
+    }
+    tokens <- to_locs |>
+      lapply(\(loc) {
+        vars[seq(match(tokens[loc - 1], vars), match(tokens[loc + 1], vars))]
+      }) |>
+      unlist() |>
+      union(tokens[-to_locs])
+  }
+  rlang::expr(tidyselect::all_of(!!tokens))
+}
 
-  # SPSS doesn't allow "all" or "to" as var names, so don't need to check for that
-  if (stringr::str_detect(tolower(x), "^(all|\\(\\s*all\\s*\\))$")) {
-    rlang::expr(tidyselect::everything())
-  } else if (stringr::str_detect(x, "\\(|\\)")) {
+var_grps_to_tidyselect <- function(x, vars, subc) {
+  if (length(x) == 1 && tolower(x) == "all") {
+    list(rlang::expr(tidyselect::everything()))
+  } else {
+    lapply(x, vars_to_tidyselect, vars = vars, subc = subc)
+  }
+}
+
+join_tokens <- function(x, sep = " ", replace_whitespace = NULL) {
+  x <- unlist(x)
+  if (!is.null(replace_whitespace)) {
+    x <- stringr::str_replace_all(x, "\\s", replace_whitespace)
+  }
+  trimws(paste(x, collapse = sep))
+}
+
+
+parse_user_missing <- function(x, vars) {
+  ws_placeholder <- "@WS@"
+  tokens <- x
+  x <- join_tokens(x, replace_whitespace = ws_placeholder)
+  
+  groups <- stringr::str_match_all(x, "([^()\\s].*?)\\s\\(\\s([^()\\s].*?)\\s\\)")[[1]]
+  if (paste(groups[, 1], collapse = " ") != x) {
+    stop("Invalid `/MISSINGVALS` specification.")
+  }
+  
+  unsupported <- setdiff(c("thru", "hi", "lo", "highest", "lowest"), vars)
+  unsupported <- paste(paste0("\\b", unsupported, "\\b"), collapse = "|")
+  if (any(grepl(unsupported, tolower(groups[, 3])))) {
+    cli::cli_abort(c(
+      "!" = "Missing value ranges, and use of the `THRU`, `HIGHEST`, and `LOWEST` keywords, are not supported by the `/MISSINGVALS` subcommand.",
+      "i" = "Instead, set missing value ranges using the SPSS `MISSING VALUES` command before executing `LIGHTHOUSE CODEBOOK`."
+    ))
+  }
+  var_groups <- var_grps_to_tidyselect(
+    groups[, 2],
+    vars = vars, 
+    subc = "MISSINGVALS"
+  )
+  val_groups <- stringr::str_match_all(
+    groups[, 3],
+    "(?:([^=\\s]+?)\\s=\\s)?([^=\\s]+)"
+  )
+  val_groups <- lapply(val_groups, \(grp) {
+    vals <- grp[, 3]
+    nms <- grp[, 2]
+    if (!all(is.na(nms))) {
+      nms[is.na(nms)] <- ""
+      nms <- stringr::str_replace_all(nms, stringr::fixed(ws_placeholder), " ")
+      names(vals) <- nms
+    }
+    vals
+  })
+  mapply(rlang::new_formula, var_groups, val_groups)
+}
+  
+parse_split_labels <- function(x, vars) {
+  x <- join_tokens(x)
+
+  if (stringr::str_detect(x, "\\(|\\)")) {
     if (!stringr::str_detect(x, "^(?:\\([^()]*\\S[^()]*\\)\\s*)+$")) {
       stop(
         "If parens are used to group variables for SPLITLABELS, all variables ",
         "must be enclosed in parens."
       )
     }
-    groups <- stringr::str_match_all(x, "\\(([^()]*\\S[^()]*)\\)")[[1]][, 2]
-    out <- lapply(groups, parse_split_labels, vars = vars)
-    rlang::expr(list(!!!out))
-  } else {
-    tokens <- strsplit(x, "\\s+")[[1]]
-    if (any(tolower(tokens) == "all")) {
-      stop(
-        "The ALL keyword is allowed in SPLITLABELS only if no other variables ",
-        "are specified."
-      )
-    }
-    to_locs <- which(tolower(tokens) == "to")
-    if (length(to_locs)) {
-      if (
-        any(to_locs %in% c(1, length(tokens))) || # TO at beginning or end
-          any(diff(to_locs) < 3) # `a TO b TO c` or `a TO TO b`
-      ) {
-        stop("Invalid use of TO keyword in SPLITLABELS.")
-      }
-      tokens <- to_locs |>
-        lapply(\(loc) {
-          vars[seq(match(tokens[loc - 1], vars), match(tokens[loc + 1], vars))]
-        }) |>
-        unlist() |>
-        union(tokens[-to_locs])
-    }
-    rlang::expr(tidyselect::all_of(!!tokens))
+    x <- stringr::str_match_all(x, "\\(\\s([^()]*\\S[^()]*)\\s\\)")[[1]][, 2]
   }
+  out <- var_grps_to_tidyselect(x, vars = vars, subc = "SPLITLABELS")
+  rlang::expr(list(!!!out))
 }
 
 tempfile_from_active <- function() {
@@ -85,33 +155,57 @@ tempfile_from_active <- function() {
   temp_path
 }
 
+check_lighthouse_codebook_pkg <- function(min_ver = package_version("0.3.2")) {
+  msg1 <- NULL
+  if (!requireNamespace("lighthouse.codebook", quietly = TRUE)) {
+    msg1 <- paste0(
+      "  The lighthouse.codebook package must be installed in SPSS's R environment \n",
+      "  before this command can be used."
+    )
+    msg2 <- "  -> To install lighthouse.codebook from GitHub, run:"
+  } else if (packageVersion("lighthouse.codebook") < min_ver) {
+    msg1 <- paste0(
+      "  The lighthouse.codebook package in SPSS's R environment must be updated to \n",
+      "  version ", min_ver, " or later before this command can be used."
+    )
+    msg2 <- "  -> To update lighthouse.codebook, run:"
+  }
+  if (!is.null(msg1)) {
+    stop(paste(
+      "\n********************************************************************************",
+      msg1,
+      msg2,
+      "      LIGHTHOUSE CODEBOOK /INSTALL.",
+      "********************************************************************************",
+      sep = "\n\n"
+    ))
+  }
+}
+
 cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
                          datafile = NULL,
                          open = c("yes", "no"),
                          split_var_labels = NULL,
                          dataset_name = NULL,
-                         hyperlinks = c("yes", "no"),
                          group_by = NULL,
+                         group_rows = NULL,
+                         group_rows_numeric = group_rows,
+                         group_rows_categorical = group_rows,
+                         user_missing = NULL,
                          detail_missing = c("ifany", "yes", "no"),
                          n_text_vals = 5,
+                         rmv_html = c("yes", "no"),
+                         rmv_line_breaks = c("yes", "no"),
+                         hyperlinks = c("yes", "no"),
                          overwrite = c("yes", "no")) {
   open <- match.arg(open) == "yes"
+  detail_missing <- sub("ifany", "if_any_user_missing", match.arg(detail_missing))
+  rmv_html <- match.arg(rmv_html) == "yes"
+  rmv_line_breaks <- match.arg(rmv_line_breaks) == "yes"
   hyperlinks <- match.arg(hyperlinks) == "yes"
-  detail_missing <- sub("ifany", "if_any", match.arg(detail_missing))
   overwrite <- match.arg(overwrite) == "yes"
   
-  if (!requireNamespace("lighthouse.codebook", quietly = TRUE)) {
-    stop(
-      "\n",
-      "********************************************************************************\n\n",
-      "  The lighthouse.codebook package must be installed in SPSS's R environment \n",
-      "  before this command can be used.\n\n",
-      "  -> To install lighthouse.codebook from GitHub, run:\n\n",
-      "      LIGHTHOUSE CODEBOOK /INSTALL.\n\n",
-      "  -> You will only need to do this once.\n\n",
-      "********************************************************************************\n\n"
-    )
-  }
+  check_lighthouse_codebook_pkg()
   
   if (missing(file) && !open) stop("OUTFILE must be specified if OPEN=NO.")
   
@@ -120,26 +214,56 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
     on.exit(unlink(datafile, force = TRUE))
   }
   
-  dat <- haven::read_sav(datafile)
+  dat <- haven::read_sav(datafile, user_na = TRUE)
   
-  if (!is.null(group_by)) {
-    group_by <- rlang::expr(tidyselect::all_of(!!unlist(group_by)))
+  group_row_args <- list(ROWS = group_rows, ROWSNUM = group_rows_numeric, 
+                         ROWSCAT = group_rows_categorical)
+  for (nm in names(group_row_args)) {
+    arg_val <- group_row_args[[nm]]
+    if (!is.null(arg_val)) {
+      if (is.null(group_by)) {
+        cli::cli_abort("If {nm} is specified, BY must also be specified.")
+      }
+      if (length(setdiff(arg_val, group_by))) {
+        cli::cli_abort(
+          "All variables specified in {nm} must also be included in BY."
+        )
+      }
+      group_row_args[[nm]] <- unlist(arg_val)
+    } else if (nm != "ROWS") {
+      group_row_args[[nm]] <- group_row_args$ROWS
+    }
   }
+  
+  if (!is.null(group_by)) group_by <- unlist(group_by)
   
   if (!is.null(split_var_labels)) {
     split_var_labels <- parse_split_labels(split_var_labels, vars = names(dat))
   }
   
+  if (!is.null(user_missing)) {
+    user_missing <- parse_user_missing(user_missing, vars = names(dat))
+  }
+  
   dat |> 
-    lighthouse.codebook::cb_create_spss(
-      .split_var_labels = !!split_var_labels
+    lighthouse.codebook:::cb_create_spss_impl(
+      .user_missing = user_missing,
+      .split_var_labels = !!split_var_labels,
+      .options = lighthouse.codebook::cb_create_options(
+        rmv_html = rmv_html,
+        rmv_line_breaks = rmv_line_breaks
+      )
     ) |>
-    lighthouse.codebook::cb_write(
+    lighthouse.codebook:::cb_write_impl(
       file,
       dataset_name = dataset_name,
-      group_by = !!group_by, 
+      group_by = group_by, 
+      group_rows = group_row_args$ROWS,
+      group_rows_numeric = group_row_args$ROWSNUM,
+      group_rows_categorical = group_row_args$ROWSCAT,
       detail_missing = detail_missing,
       n_text_vals = n_text_vals,
+      hyperlinks = hyperlinks,
       overwrite = overwrite
     )
   cat("Codebook written to", file, "\n")
@@ -147,7 +271,7 @@ cb_from_spss <- function(file = tempfile(fileext = ".xlsx"),
   if (open) lighthouse::file.open(file)
 }
 
-Run <- function(args){
+Run <- function(args) {
   args <- args[[2]]
   if ("install" %in% tolower(names(args))) {
     install_lighthouse_codebook()
@@ -163,7 +287,23 @@ Run <- function(args){
         "FILE", subc = "DATA", ktype = "literal", var = "datafile"
       ),
       spsspkg.Template(
-        "", subc = "BY", ktype = "existingvarlist", var = "group_by", 
+        "BY", subc = "GROUP", ktype = "existingvarlist", var = "group_by", 
+        islist = TRUE
+      ),
+      spsspkg.Template(
+        "ROWS", subc = "GROUP", ktype = "existingvarlist", var = "group_rows", 
+        islist = TRUE
+      ),
+      spsspkg.Template(
+        "ROWSNUM", subc = "GROUP", ktype = "existingvarlist", 
+        var = "group_rows_numeric", islist = TRUE
+      ),
+      spsspkg.Template(
+        "ROWSCAT", subc = "GROUP", ktype = "existingvarlist", 
+        var = "group_rows_categorical", islist = TRUE
+      ),
+      spsspkg.Template(
+        "", subc = "MISSINGVALS", ktype = "literal", var = "user_missing",
         islist = TRUE
       ),
       spsspkg.Template(
@@ -175,10 +315,6 @@ Run <- function(args){
         vallist = list("yes", "no")
       ),
       spsspkg.Template(
-        "HYPERLINKS", subc = "OPTIONS", ktype = "str", var = "hyperlinks",
-        vallist = list("yes", "no")
-      ),
-      spsspkg.Template(
         "DETAILMISSING", subc = "OPTIONS", ktype = "str", var = "detail_missing",
         vallist = list("ifany", "yes", "no")
       ),
@@ -187,11 +323,22 @@ Run <- function(args){
         vallist = list(0)
       ),
       spsspkg.Template(
+        "RMVHTML", subc = "OPTIONS", ktype = "str", var = "rmv_html",
+        vallist = list("yes", "no")
+      ),
+      spsspkg.Template(
+        "RMVLINEBREAKS", subc = "OPTIONS", ktype = "str", var = "rmv_line_breaks",
+        vallist = list("yes", "no")
+      ),
+      spsspkg.Template(
+        "HYPERLINKS", subc = "OPTIONS", ktype = "str", var = "hyperlinks",
+        vallist = list("yes", "no")
+      ),
+      spsspkg.Template(
         "OVERWRITE", subc = "OPTIONS", ktype = "str", var = "overwrite",
         vallist = list("yes", "no")
       )
     ))
-
     spsspkg.processcmd(oobj, args, "cb_from_spss")
   }
 }
