@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Options to group numeric and/or categorical summary tabs by rows by using the 
     `/GROUP` subcommand with the `ROWS`, `ROWSNUM`, or `ROWSCAT` parameters.
 
+- New `/OPTIONS` parameters `RMVHTML` and `RMVLINEBREAKS` control whether HTML tags 
+  or line breaks are removed from variable and value labels.
+
 - Check for minimum required version of lighthouse.codebook package.
 
 ### Changed
