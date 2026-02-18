@@ -9,7 +9,7 @@ dataset or a specified data file.
 Installation requires two steps. 
 
 1. Install the `LIGHTHOUSE CODEBOOK` extention bundle:
-    * Download the latest "LIGHTHOUSE_CODEBOOK.spe" extension bundle by clicking [here](https://github.com/ccsarapas/lighthouse.codebook.spss/raw/refs/heads/main/LIGHTHOUSE_CODEBOOK.spe).
+    * Download the "LIGHTHOUSE_CODEBOOK.spe" extension bundle from the most recent release [here](https://github.com/ccsarapas/lighthouse.codebook.spss/releases/latest).
     
     * In SPSS Statistics, navigate to Extensions -> Install Local Extension Bundle...
     
@@ -20,7 +20,7 @@ R environment by running:
     ```stata
     LIGHTHOUSE CODEBOOK /INSTALL.
     ```
-    You will only need to do this the first time you use the command, or when updating to a new version. You do _not_ have to do this every session.
+    You will only need to do this once, or if updating to a later version.
 
 ## Usage
 
@@ -193,10 +193,11 @@ LIGHTHOUSE CODEBOOK
 
 ### MISSINGVALS Subcommand
 
-User missing values can be defined in the usual way (i.e., using the `MISSING VALUES` command or the Variable View tab) and will be appropriately handled by `LIGHTHOUSE CODEBOOK`. However, they can also be defined using the `MISSINGVALS` subcommand, which offers greater flexibility than SPSS's native user missing value handling. Specifically:
+User missing values defined in the SPSS dataset (i.e., using the `MISSING VALUES` command or the Variable View tab) will be appropriately handled by `LIGHTHOUSE CODEBOOK`. However, user missing values can also be defined using the `MISSINGVALS` subcommand to `LIGHTHOUSE CODEBOOK`, which offers greater flexibility than SPSS's native user missing value handling. Specifically:
 * An unlimited number of discrete missing values can be specified (whereas SPSS allows only three).
 * Labels can be assigned to user missing values and will appear in codebook summaries. (e.g., `Confidential = -6, Refused = -7`.)
 * The same user missing values can be set across numeric and string variables, with automatic conversion to the appropriate type. (e.g., if `-3` is specified, it will be applied to numeric variables as `-3` and to string variables as `"-3"`.) Variable types not compatible with user missing values (e.g., dates) will be ignored.
+* As a result, it is easy to specify the same user missings across all compatible variables in the dataset using the `ALL` keyword.
 
 ```stata
 * basic usage.
