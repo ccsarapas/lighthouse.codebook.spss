@@ -9,7 +9,7 @@ dataset or a specified data file.
 Installation requires two steps. 
 
 1. Install the `LIGHTHOUSE CODEBOOK` extention bundle:
-    * Download the "LIGHTHOUSE_CODEBOOK.spe" extension bundle from the most recent release [here](https://github.com/ccsarapas/lighthouse.codebook.spss/releases/latest).
+    * Download the latest "LIGHTHOUSE_CODEBOOK.spe" extension bundle by clicking [here](https://github.com/ccsarapas/lighthouse.codebook.spss/raw/refs/heads/main/LIGHTHOUSE_CODEBOOK.spe).
     
     * In SPSS Statistics, navigate to Extensions -> Install Local Extension Bundle...
     
