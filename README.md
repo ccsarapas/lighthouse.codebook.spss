@@ -20,7 +20,7 @@ R environment by running:
     ```stata
     LIGHTHOUSE CODEBOOK /INSTALL.
     ```
-    You will only need to do this once, or if updating to a later version.
+    You will only need to do this the first time you use the command, or when updating to a new version. You do _not_ have to do this every session.
 
 ## Usage
 
