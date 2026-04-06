@@ -18,10 +18,22 @@ install_lighthouse_codebook <- function() {
     "",
     sep = "\n"
   )
-  if (!requireNamespace("remotes", quietly = TRUE)) {
-    install.packages("remotes", repos = "https://cloud.r-project.org")
+  cran_pkgs <- c("remotes", "git2r")
+  installed <- vapply(cran_pkgs, requireNamespace, logical(1), quietly = TRUE)
+  if (sum(!installed)) {
+    install.packages(cran_pkgs[!installed], repos = "https://cloud.r-project.org")
   }
-  remotes::install_github("ccsarapas/lighthouse.codebook", upgrade = TRUE)
+  if (sum(installed)) {
+    suppressWarnings(update.packages(
+      oldPkgs = cran_pkgs[installed], 
+      repos = "https://cloud.r-project.org", 
+      ask = FALSE
+    ))
+  }
+  remotes::install_github(
+    "ccsarapas/lighthouse.codebook",
+    upgrade = TRUE, repos = "https://cloud.r-project.org"
+  )
 }
 
 vars_to_tidyselect <- function(x, vars, subc) {
