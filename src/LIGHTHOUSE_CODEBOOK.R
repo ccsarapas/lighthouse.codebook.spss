@@ -19,20 +19,19 @@ install_lighthouse_codebook <- function() {
     sep = "\n"
   )
   cran_pkgs <- c("remotes", "git2r")
-  installed <- vapply(cran_pkgs, requireNamespace, logical(1), quietly = TRUE)
-  if (sum(!installed)) {
-    install.packages(cran_pkgs[!installed], repos = "https://cloud.r-project.org")
-  }
-  if (sum(installed)) {
-    suppressWarnings(update.packages(
-      oldPkgs = cran_pkgs[installed], 
-      repos = "https://cloud.r-project.org", 
-      ask = FALSE
-    ))
+  cran_installed <- vapply(cran_pkgs, requireNamespace, logical(1), quietly = TRUE)
+  old <- options(install.packages.check.source = "no")
+  on.exit(options(old), add = TRUE)
+  if (sum(!cran_installed)) {
+    install.packages(
+      cran_pkgs[!cran_installed],
+      repos = "https://cloud.r-project.org",
+      type = "binary"
+    )
   }
   remotes::install_github(
     "ccsarapas/lighthouse.codebook",
-    upgrade = TRUE, repos = "https://cloud.r-project.org"
+    upgrade = "never", repos = "https://cloud.r-project.org", type = "binary"
   )
 }
 
